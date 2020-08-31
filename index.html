@@ -1,0 +1,316 @@
+<html>
+	<head>
+		
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="Agile tools - retrospective wheel">
+		<meta name="author" content="Agilettols">
+		<meta name="keywords" content="Agile tools, retrospective wheel, who wants to go next, selection wheel">
+		<script src="js/min.js"></script>
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+		<!-- <link href="css/spin.css" rel="stylesheet" > -->
+		<title> Agile tools</title>
+	</head>
+
+<body onload="checkCookie()">
+<h1> <centre>AGILE TOOLS
+</centre>
+</h1>
+<br><br>
+
+<div class="container">
+	<h4>
+		<centre>
+		Create a wheel by adding the list of names in the below test area. Or use the same wheel which you aleady have.
+		</centre>
+	</h4>
+	<div class="row">
+		<div class="col">
+			
+		</div>
+	</div>
+	<br>
+	<br>
+	<div class="row">
+		<div class="col-3">
+
+			<div class="form-group">
+				<h2><label for="exampleFormControlTextarea1">Enter the list of names:</label></h2>
+				<textarea class="form-control" id="nameslist" rows="15"></textarea>
+			</div>
+
+				<button type="button" class="btn btn-primary btn-block" onclick="addnames()">Add</button>
+				<button type="button" class="btn btn-danger btn-block" onclick="clearnames()">Clear</button>				
+			
+
+		</div>	
+		<div class="col-6">
+			<div id="chart"></div>
+		</div>
+		
+		  
+		
+	  </div>
+	  
+	  <div id="question" style="text-align: center; font-size: xx-large"><h1 ></h1></div>
+	
+</div>
+
+    
+
+
+<script>
+var data = [];
+var names = [];
+var container;
+var padding = {
+	top: 20,
+	right: 40,
+	bottom: 0,
+	left: 0
+},
+w = 500 - padding.left - padding.right,
+h = 500 - padding.top - padding.bottom,
+r = Math.min(w, h) / 2,
+rotation = 0,
+oldrotation = 0,
+picked = 100000,
+oldpick = [],
+color = d3.scale.category20(); //category20c()
+var vis;
+
+function clearnames()
+{
+	deletechart();
+	console.log('Clear');
+	eraseCookie('agilewheel');
+	document.getElementById("nameslist").value="";
+	document.getElementById("nameslist").placeholder = "Alice\nBob\nCharlie\ndelta";
+
+}
+
+function setCookie(cname, cvalue, exdays) {
+  var d = new Date();
+  d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+  var expires = "expires="+d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var ca = document.cookie.split(';');
+  for(var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+function checkCookie() {
+  var kookie = getCookie("agilewheel");
+  if (kookie != "") {
+	  names = [];
+	   	names = kookie.split('|');
+		// data = [];
+		// for (let i=0;i<names.length;i++)
+		// {
+		// 	var k = {};
+		// 	k["label"] = names[i];
+		// 	k["value"] = i+1;
+		// 	data.push(k);
+		// }
+		document.getElementById("nameslist").value = names.join('\n');
+		addnames();
+		
+  } else {
+	document.getElementById("nameslist").placeholder = "Alice\nBob\nCharlie\ndelta";
+  }
+}
+
+function eraseCookie(name) {   
+	document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
+
+function deletechart()
+{
+	if (document.getElementById('svgelement'))
+	{
+		document.getElementById('svgelement').remove();
+		data = [];
+	}
+}
+
+function addnames()
+{
+	deletechart();
+	names = document.getElementById('nameslist').value.split('\n');
+	// var data = [];
+	for (let i=0;i<names.length;i++)
+	{
+		var k = {};
+		k["label"] = names[i];
+		k["value"] = i+1;
+		data.push(k);
+	}
+	console.log(data);
+	eraseCookie('agilewheel');
+	showchart();
+	setCookie('agilewheel',names.join('|'),1000);
+	console.log(getCookie('agilewheel'));
+	console.log(document.cookie);
+}
+
+
+function showchart()
+{
+
+var svg = d3.select('#chart')
+	.append("svg")
+	.data([data])
+	.attr("width", w + padding.left + padding.right)
+	.attr("height", h + padding.top + padding.bottom)
+	.attr("id","svgelement");
+container = svg.append("g")
+	.attr("class", "chartholder")
+	.attr("transform", "translate(" + (w / 2 + padding.left) + "," + (h / 2 + padding.top) + ")");
+vis = container
+	.append("g");
+
+var pie = d3.layout.pie().sort(null).value(function (d) {
+		return 1;
+	});
+// declare an arc generator function
+var arc = d3.svg.arc().outerRadius(r);
+// select paths, use arc generator to draw
+var arcs = vis.selectAll("g.slice")
+	.data(pie)
+	.enter()
+	.append("g")
+	.attr("class", "slice");
+
+arcs.append("path")
+.attr("fill", function (d, i) {
+	return color(i);
+})
+.attr("d", function (d) {
+	return arc(d);
+});
+// add the text
+arcs.append("text").attr("transform", function (d) {
+	d.innerRadius = 0;
+	d.outerRadius = r;
+	d.angle = (d.startAngle + d.endAngle) / 2;
+	return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius - 10) + ")";
+})
+.attr("text-anchor", "end")
+.text(function (d, i) {
+	return data[i].label;
+});
+container.on("click", spin);
+
+svg.append("g")
+.attr("transform", "translate(" + (w + padding.left + padding.right) + "," + ((h / 2) + padding.top) + ")")
+.append("path")
+.attr("d", "M-" + (r * .15) + ",0L0," + (r * .05) + "L0,-" + (r * .05) + "Z")
+.style({
+	"fill": "black"
+});
+//draw spin circle
+container.append("circle")
+.attr("cx", 0)
+.attr("cy", 0)
+.attr("r", 60)
+.style({
+	"fill": "white",
+	"cursor": "pointer"
+});
+//spin text
+container.append("text")
+.attr("x", 0)
+.attr("y", 15)
+.attr("text-anchor", "middle")
+.on("click", spin)
+.text("SPIN")
+.style({
+	"font-weight": "bold",
+	"font-size": "30px"
+});
+
+}
+
+function spin(d) {
+
+	container.on("click", null);
+	//all slices have been seen, all done
+	console.log("OldPick: " + oldpick.length, "Data length: " + data.length);
+	if (oldpick.length == data.length) {
+		console.log("done");
+		container.on("click", null);
+		return;
+	}
+	var ps = 360 / data.length,
+	pieslice = Math.round(1440 / data.length),
+	rng = Math.floor((Math.random() * 1440) + 360);
+
+	rotation = (Math.round(rng / ps) * ps);
+
+	picked = Math.round(data.length - (rotation % 360) / ps);
+	picked = picked >= data.length ? (picked % data.length) : picked;
+	if (oldpick.indexOf(picked) !== -1) {
+		d3.select(this).call(spin);
+		return;
+	} else {
+		oldpick.push(picked);
+	}
+	rotation += 90 - Math.round(ps / 2);
+	vis.transition()
+	.duration(3000)
+	.attrTween("transform", rotTween)
+	.each("end", function () {
+		//mark question as seen
+		d3.select(".slice:nth-child(" + (picked + 1) + ") path")
+		.attr("fill", "#111");
+		//populate question
+		d3.select("#question h1")
+		.text(data[picked].label);
+		oldrotation = rotation;
+
+		/* Get the result value from object "data" */
+		console.log(data[picked].value)
+
+		/* Comment the below line for restrict spin to sngle time */
+		container.on("click", spin);
+	});
+}
+//make arrow
+
+
+function rotTween(to) {
+	var i = d3.interpolate(oldrotation % 360, rotation);
+	return function (t) {
+		return "rotate(" + i(t) + ")";
+	};
+}
+
+function getRandomNumbers() {
+	var array = new Uint16Array(1000);
+	var scale = d3.scale.linear().range([360, 1440]).domain([0, 100000]);
+	if (window.hasOwnProperty("crypto") && typeof window.crypto.getRandomValues === "function") {
+		window.crypto.getRandomValues(array);
+		console.log("works");
+	} else {
+		//no support for crypto, get crappy random numbers
+		for (var i = 0; i < 1000; i++) {
+			array[i] = Math.floor(Math.random() * 100000) + 1;
+		}
+	}
+	return array;
+}
+
+</script>
+</body></html>
